@@ -1,0 +1,194 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2638
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red64\green11\blue217;\red0\green0\blue0;\red200\green20\blue201;
+\red193\green101\blue28;\red180\green36\blue25;\red46\green174\blue187;}
+{\*\expandedcolortbl;;\cssrgb\c32309\c18666\c88229;\csgray\c0;\cssrgb\c83397\c23074\c82666;
+\cssrgb\c80555\c47366\c13837;\cssrgb\c76411\c21697\c12527;\cssrgb\c20199\c73241\c78251;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\fs22 \cf2 \CocoaLigature0 #!/usr/bin/env python\cf3 \
+\
+\cf4 import\cf3  h5py\
+\cf4 import\cf3  numpy \cf5 as\cf3  np\
+\cf4 import\cf3  datetime\
+\cf4 import\cf3  os\
+\cf4 import\cf3  kaipy.solarWind.swBCplots\
+\cf4 from\cf3  astropy.time \cf4 import\cf3  Time\
+\
+\
+bcwindPath = \cf6 './'\cf3 \
+bcwindFile = \cf6 'bcwind_5n_-400Vx_-3Bz_0By.h5'\cf3 \
+sw_ref       = \cf6 "2137-03-20T00:00:00"\cf3  \cf2 #20-March-2017 00:00:00\cf3 \
+\cf2 #start_shift       = -7.5 #this shifts the start time to be 12T06:00:00\cf3 \
+\cf2 #filename = 'eclipse_march2013sw_'+str(int(Tshift))+'hrshift'\cf3 \
+\cf2 #fOut = filename + '.h5'\cf3 \
+fOut = bcwindPath + bcwindFile\
+\
+n0 = \cf6 5.\cf3  \cf2 #5 #/cc\cf3 \
+vx0 = -\cf6 400.\cf3  \cf2 #km/s\cf3 \
+vy0 = \cf6 0.\cf3  \cf2 #km/s\cf3 \
+vz0 = \cf6 0.\cf3  \cf2 #kms\cf3 \
+bz0 = -\cf6 3.\cf3  \cf2 # nT\cf3 \
+by0 = \cf6 0.\cf3  \cf2 # nT\cf3 \
+bx0 = \cf6 0.\cf3  \cf2 # nT\cf3 \
+\cf2 #cs0 = 40 #km/s\cf3 \
+T0 = \cf6 1.0e+5\cf3      \cf2 #Default temperature, K  \cf3 \
+f107 = \cf6 100.\cf3 \
+\cf2 #Kp = 1\cf3 \
+\
+ntime = \cf6 2\cf3  + \cf6 4\cf3  + \cf6 12\cf3 \
+\
+doEps = \cf7 False\cf3 \
+\cf2 #t0Str="2010-01-01T00:00:00"\cf3 \
+fmt1=\cf6 '%Y-%m-%dT%H:%M:%S'\cf3 \
+fmt2=\cf6 '%Y-%m-%d %H:%M:%S'\cf3 \
+\cf2 #teclipse = datetime.datetime.strptime(eclipse_peak,fmt1)\cf3 \
+\cf2 #mjdeclipse = Time(teclipse).mjd\cf3 \
+\
+tsw = datetime.datetime.strptime(sw_ref,fmt1)\
+\cf2 #tsw = tsw + datetime.timedelta(hours=start_shift)\cf3 \
+\cf2 #tsw = tsw + datetime.timedelta(hours=start_shift)\cf3 \
+\
+\cf2 #teclipse = teclipse + datetime.timedelta(hours=start_shift)\cf3 \
+\
+\cf2 #if Tshift <=0:\cf3 \
+\cf2 #  tstart = tsw + datetime.timedelta(hours=Tshift)\cf3 \
+\cf2 #  print(Tshift,tsw,tsw+datetime.timedelta(hours=Tshift))\cf3 \
+\cf2 #else:\cf3 \
+\cf2 #  #print(Tshift,tsw,tsw+datetime.timedelta(hours=Tshift))\cf3 \
+\cf2 #  #if tsw+datetime.timedelta(hours=Tshift) < tsw:\cf3 \
+\cf2 #  #  print(Tshift,tsw,datetime.timedelta(hours=Tshift))\cf3 \
+\cf2 #  teclipse = teclipse+datetime.timedelta(hours=-1.*Tshift)\cf3 \
+\cf2 #  offset = teclipse.hour%6 + teclipse.minute/60. + teclipse.second/60./60.\cf3 \
+\cf2 #  tstart = tsw + datetime.timedelta(hours=-1.*offset)\cf3 \
+\cf2 #  teclipse = teclipse+datetime.timedelta(hours=-1.*offset)\cf3 \
+\cf2 #  print(Tshift,tsw,teclipse)\cf3 \
+\cf2 #  #offset = tstart.hour % 6\cf3 \
+\
+\cf2 #tstart = tstart + datetime.timedelta(hours=offset,minutes=tsw.minute)\cf3 \
+\
+\cf2 #fp = bcwindPath+bcwindFile\cf3 \
+\
+data = \{\}\
+fk = [\cf6 'T'\cf3 ,\cf6 'MJD'\cf3 ,\cf6 'D'\cf3 ,\cf6 'Vx'\cf3 ,\cf6 'Vy'\cf3 ,\cf6 'Vz'\cf3 ,\cf6 'Bx'\cf3 ,\cf6 'By'\cf3 ,\cf6 'Bz'\cf3 ,\cf6 'tilt'\cf3 ,\cf6 'Temp'\cf3 ,\cf6 'symh'\cf3 ,\cf6 'f10.7'\cf3 ] \cf2 #,'Kp'\cf3 \
+\cf5 for\cf3  ik \cf5 in\cf3  fk:\
+  data.update(\{ik: []\})\
+  data[ik] = np.zeros(ntime*\cf6 60\cf3 )\
+\
+data.update(\{\cf6 'UT'\cf3 : []\})\
+\
+data[\cf6 'f10.7'\cf3 ] = data[\cf6 'f10.7'\cf3 ] + f107\
+data[\cf6 'symh'\cf3 ] = data[\cf6 'symh'\cf3 ] - \cf6 10.\cf3 \
+\cf2 #data['Kp'] = data['Kp'] + Kp\cf3 \
+\
+\cf5 for\cf3  i \cf5 in\cf3  \cf7 range\cf3 (\cf6 0\cf3 ,\cf6 2\cf3 *\cf6 60\cf3 ):\
+  ctime = tsw + datetime.timedelta(minutes=i)\
+  cmjd = Time(ctime).mjd\
+  ctime_iso = Time(cmjd,\cf7 format\cf3 =\cf6 'mjd'\cf3 ).isot\
+  data[\cf6 'T'\cf3 ][i] = i\
+  data[\cf6 'UT'\cf3 ].append(np.string_(ctime_iso))\
+  data[\cf6 'MJD'\cf3 ][i] = cmjd\
+  data[\cf6 'D'\cf3 ][i] = n0\
+  data[\cf6 'Vx'\cf3 ][i] = vx0\
+  data[\cf6 'Vy'\cf3 ][i] = vy0\
+  data[\cf6 'Vz'\cf3 ][i] = vz0\
+  data[\cf6 'Bx'\cf3 ][i] = bx0\
+  data[\cf6 'By'\cf3 ][i] = by0\
+  data[\cf6 'Bz'\cf3 ][i] = -\cf6 5\cf3 \
+  data[\cf6 'Temp'\cf3 ][i] = T0\
+\
+\
+\
+\cf5 for\cf3  i \cf5 in\cf3  \cf7 range\cf3 (\cf6 2\cf3 *\cf6 60\cf3 ,\cf6 6\cf3 *\cf6 60\cf3 ):\
+  ctime = tsw + datetime.timedelta(minutes=i)\
+  cmjd = Time(ctime).mjd\
+  ctime_iso = Time(cmjd,\cf7 format\cf3 =\cf6 'mjd'\cf3 ).isot\
+  data[\cf6 'T'\cf3 ][i] = i\
+  data[\cf6 'UT'\cf3 ].append(np.string_(ctime_iso))\
+  data[\cf6 'MJD'\cf3 ][i] = cmjd\
+  data[\cf6 'D'\cf3 ][i] = n0\
+  data[\cf6 'Vx'\cf3 ][i] = vx0\
+  data[\cf6 'Vy'\cf3 ][i] = vy0\
+  data[\cf6 'Vz'\cf3 ][i] = vz0\
+  data[\cf6 'Bx'\cf3 ][i] = bx0\
+  data[\cf6 'By'\cf3 ][i] = by0\
+  data[\cf6 'Bz'\cf3 ][i] = \cf6 5\cf3 \
+  data[\cf6 'Temp'\cf3 ][i] = T0\
+\
+\cf5 for\cf3  i \cf5 in\cf3  \cf7 range\cf3 (\cf6 6\cf3 *\cf6 60\cf3 ,ntime*\cf6 60\cf3 ):\
+  ctime = tsw + datetime.timedelta(minutes=i)\
+  cmjd = Time(ctime).mjd\
+  ctime_iso = Time(cmjd,\cf7 format\cf3 =\cf6 'mjd'\cf3 ).isot\
+  data[\cf6 'T'\cf3 ][i] = i\
+  data[\cf6 'UT'\cf3 ].append(np.string_(ctime_iso))\
+  data[\cf6 'MJD'\cf3 ][i] = cmjd\
+  data[\cf6 'D'\cf3 ][i] = n0\
+  data[\cf6 'Vx'\cf3 ][i] = vx0\
+  data[\cf6 'Vy'\cf3 ][i] = vy0\
+  data[\cf6 'Vz'\cf3 ][i] = vz0\
+  data[\cf6 'Bx'\cf3 ][i] = bx0\
+  data[\cf6 'By'\cf3 ][i] = by0\
+  data[\cf6 'Bz'\cf3 ][i] = bz0\
+  data[\cf6 'Temp'\cf3 ][i] = T0\
+\
+\cf7 print\cf3 (\cf6 "Writing Gamera solar wind to %s"\cf3 %(fOut))\
+\
+scalars = [\cf6 'Bx0'\cf3 ,\cf6 'ByC'\cf3 ,\cf6 'BzC'\cf3 ]\
+\
+oTScl = \cf6 60.0\cf3  \cf2 #min->s                                                                                                                                                                         \cf3 \
+oDScl = \cf6 1.0\cf3 \
+oVScl = \cf6 1.0e+3\cf3  \cf2 #km/s->m/s                                                                                                                                                                            \cf3 \
+oTempScl = \cf6 1.0\cf3 \
+oBScl = \cf6 1.0\cf3 \
+\
+data[\cf6 'T'\cf3 ] = data[\cf6 'T'\cf3 ]*oTScl\
+data[\cf6 'D'\cf3 ] = data[\cf6 'D'\cf3 ]*oDScl\
+data[\cf6 'Vx'\cf3 ]= data[\cf6 'Vx'\cf3 ]*oVScl\
+data[\cf6 'Vy'\cf3 ]= data[\cf6 'Vy'\cf3 ]*oVScl\
+data[\cf6 'Vz'\cf3 ]= data[\cf6 'Vz'\cf3 ]*oVScl\
+data[\cf6 'Bx'\cf3 ]= data[\cf6 'Bx'\cf3 ]*oBScl\
+data[\cf6 'By'\cf3 ]= data[\cf6 'By'\cf3 ]*oBScl\
+data[\cf6 'Bz'\cf3 ]= data[\cf6 'Bz'\cf3 ]*oBScl\
+data[\cf6 'Temp'\cf3 ]=data[\cf6 'Temp'\cf3 ]*oTempScl\
+\
+\cf5 with\cf3  h5py.File(fOut,\cf6 'w'\cf3 ) \cf5 as\cf3  hf:\
+      \cf5 for\cf3  ik \cf5 in\cf3  scalars:\
+        hf.create_dataset(ik,data=\cf6 0\cf3 )\
+      \cf5 for\cf3  ik \cf5 in\cf3  data.keys():\
+        hf.create_dataset(ik,data=data[ik])\
+\
+\cf6 '''\cf3 \
+\cf6     hf.create_dataset("T"   ,data=data['T'])\cf3 \
+\cf6     hf.create_dataset("UT"  ,data=data['UT'])\cf3 \
+\cf6     hf.create_dataset("MJD" ,data=data['MJD'])\cf3 \
+\cf6     hf.create_dataset("D"   ,data=data['D'])\cf3 \
+\cf6     hf.create_dataset("Temp",data=data['Temp'])\cf3 \
+\cf6     hf.create_dataset("Vx"  ,data=data['Vx'])\cf3 \
+\cf6     hf.create_dataset("Vy"  ,data=data['Vy'])\cf3 \
+\cf6     hf.create_dataset("Vz"  ,data=data['Vz'])\
+    hf.create_dataset("Bx"  ,data=data['Bx'])\cf3 \
+\cf6     hf.create_dataset("By"  ,data=data['By'])\cf3 \
+\cf6     hf.create_dataset("Bz"  ,data=data['Bz'])\cf3 \
+\cf6     hf.create_dataset("xBS" ,data=data['xBS'])\cf3 \
+\cf6     hf.create_dataset("yBS" ,data=data['yBS'])\cf3 \
+\cf6     hf.create_dataset("zBS" ,data=data['zBS'])\cf3 \
+\cf6     hf.create_dataset("tilt",data=data['ThT'])\cf3 \
+\cf6     hf.create_dataset("ae"  ,data=data['AE'])\cf3 \
+\cf6     hf.create_dataset("al"  ,data=data['AL'])\cf3 \
+\cf6     hf.create_dataset("au"  ,data=data['AU'])\cf3 \
+\cf6     hf.create_dataset("symh",data=data['SYMH'])\cf3 \
+\cf6     hf.create_dataset("Interped",data=data['1*isInterp'])\cf3 \
+\cf6     hf.create_dataset("f10.7",data=data['f107min)\cf3 \
+\cf6     hf.create_dataset("Kp"  ,data=data['kpmin)\cf3 \
+\cf6     hf.create_dataset("Bx0" ,data=data['bCoef[0])\cf3 \
+\cf6     hf.create_dataset("ByC" ,data=data['bCoef[1])\cf3 \
+\cf6     hf.create_dataset("BzC" ,data=data['Coef[2])\cf3 \
+\cf6     hf.create_dataset("Va"  ,data=data['Va)\cf3 \
+\cf6     hf.create_dataset("Cs"  ,data=data['Cs)\cf3 \
+\cf6     hf.create_dataset("Magnetosonic Mach",data=data['Mfast)\cf3 \
+\cf6 '''\cf3 \
+                                                                                   \
+\
+\
+}
